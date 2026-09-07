@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CodeQuest RPG - La Academia de Heroes</title>
+  <style>
+    /* La VISTA raiz. Phaser dibuja todo dentro de #game.
+       Este CSS solo centra el lienzo y pinta el fondo. */
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0b0d17;
+      font-family: 'Trebuchet MS', system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #game {
+      width: 960px; height: 640px;
+      max-width: 100vw; max-height: 100vh;
+      box-shadow: 0 0 60px rgba(108, 99, 255, 0.35);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #game canvas { display: block; width: 100% !important; height: 100% !important; }
+    #cargando {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+      color: #6c63ff; font-size: 1.2rem; letter-spacing: 1px;
+    }
+    #cargando.oculto { display: none; }
+  </style>
+</head>
+<body>
+  <div id="cargando">CARGANDO CODEQUEST RPG...</div>
+  <div id="game"></div>
+
+  <!--
+    type="module" permite usar import/export (modulos ES).
+    Vite necesita que el punto de entrada sea un modulo.
+  -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
