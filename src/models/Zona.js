@@ -85,8 +85,8 @@ export function crearZonas() {
       concepto: 'Clases y Objetos: cada duende es un OBJETO de la clase Goblin.',
       briefing: {
         historia: 'Los duendes han infestado el bosque de entrada a la Academia. Son debiles pero atacan en grupo. Limpialos para abrir el paso al este.',
-        concepto: 'CLASES Y OBJETOS. Una CLASE es el molde; un OBJETO es cada copia creada con "new". Los 3 duendes que ves son 3 objetos distintos de la MISMA clase Goblin: comparten comportamiento pero cada uno tiene su propia vida, nombre y posicion.',
-        ejemplo: 'const gruk = new Goblin("Gruk");   // objeto 1\nconst nok  = new Goblin("Nok");    // objeto 2  (mismo molde)',
+        concepto: 'CLASES Y OBJETOS. La CLASE Goblin define, UNA sola vez, los atributos (vida, ataque...) y metodos (atacar, recibirDanio...) que tendra cualquier duende. Cada "new Goblin(...)" crea una INSTANCIA: un objeto real en memoria, con esa misma plantilla pero con su propio estado. Por eso los 3 duendes se comportan igual pero cada uno tiene su vida y su nombre por separado.',
+        ejemplo: 'const gruk = new Goblin("Gruk");   // instancia 1\nconst nok  = new Goblin("Nok");    // instancia 2 (misma clase)',
         objetivo: 'Derrota a los 3 duendes. Abre los 2 cofres (tecla E). Habla con el Anciano (tecla E).'
       },
       anchoTiles: 24, altoTiles: 16,
@@ -120,8 +120,8 @@ export function crearZonas() {
       concepto: 'Encapsulamiento: la vida es privada (#) y solo cambia con metodos.',
       briefing: {
         historia: 'Bajo la Academia se extienden criptas llenas de esqueletos y un nigromante. Los esqueletos vuelven a levantarse una vez: no bajes la guardia.',
-        concepto: 'ENCAPSULAMIENTO. Los datos importantes de un personaje (#vida, #energia) son PRIVADOS: no se pueden tocar desde fuera. Solo cambian a traves de metodos que validan las reglas (la vida nunca baja de 0 ni pasa del maximo, un personaje a 0 no puede actuar).',
-        ejemplo: 'goblin.#vida = -50;          // ERROR: campo privado\ngoblin.recibirDanio(50);     // OK: el metodo valida y limita',
+        concepto: 'ENCAPSULAMIENTO. #vida y #energia son CAMPOS PRIVADOS de la clase Personaje: el simbolo # los hace invisibles e inaccesibles fuera de ella, ni siquiera Jugador o Enemigo (sus propias subclases) pueden leerlos directo. La unica forma de cambiarlos es a traves de metodos publicos (recibirDanio, curarse) que validan una regla fija: la vida nunca es negativa ni supera el maximo.',
+        ejemplo: 'goblin.#vida = -50;          // ERROR: campo privado, no compila\ngoblin.recibirDanio(50);     // OK: el metodo valida y limita',
         objetivo: 'Derrota a los 4 enemigos para abrir la puerta al norte. Guarda pociones para el jefe.'
       },
       anchoTiles: 24, altoTiles: 16,
@@ -157,8 +157,8 @@ export function crearZonas() {
       concepto: 'Polimorfismo + Abstraccion: mismo atacar(), el Jefe responde a su manera.',
       briefing: {
         historia: 'La fortaleza del Senor de las Sombras. Sus guardias y el propio jefe usan el mismo metodo atacar() que un simple duende... pero el resultado no se parece en nada.',
-        concepto: 'POLIMORFISMO y ABSTRACCION. Todos los personajes tienen atacar(), pero cada clase lo REDEFINE: el Guerrero da un golpe fisico, el Mago lanza un hechizo, el Goblin pega dos veces, el Jefe cambia de fase al 50% de vida. El combate solo llama atacar() y elegirAccion(): no sabe (ni necesita saber) como se calcula cada uno.',
-        ejemplo: 'for (const p of personajes) p.atacar(objetivo);\n// mismo codigo -> cada objeto responde a su manera',
+        concepto: 'POLIMORFISMO y ABSTRACCION. Todas las subclases SOBRESCRIBEN (override) el metodo atacar() heredado de Personaje: el Guerrero da un golpe fisico, el Mago lanza un hechizo, el Goblin pega dos veces, el Jefe cambia de fase al 50% de vida. Combate.js llama siempre a personaje.atacar() sin preguntar de que clase es cada uno: JavaScript decide en tiempo de ejecucion cual version ejecutar (enlace dinamico). Esa es la ABSTRACCION: el codigo que llama no conoce los detalles internos, solo el contrato comun (atacar, elegirAccion).',
+        ejemplo: 'for (const p of personajes) p.atacar(objetivo);\n// mismo codigo -> cada objeto responde segun SU clase',
         objetivo: 'Derrota a los 2 guardianes y al Jefe Final. No se puede huir del Jefe. Al 50% de vida entra en Fase 2.'
       },
       anchoTiles: 24, altoTiles: 16,

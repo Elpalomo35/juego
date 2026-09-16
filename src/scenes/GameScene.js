@@ -16,6 +16,7 @@ import Phaser from 'phaser';
 import { CONFIG } from '../config.js';
 import { HUDView } from '../views/HUDView.js';
 import { DialogoView } from '../views/DialogoView.js';
+import { ReglasView } from '../views/ReglasView.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
@@ -50,12 +51,19 @@ export default class GameScene extends Phaser.Scene {
     this.hud = new HUDView(this);
     this.hud.crear();
     this.dialogo = new DialogoView(this);
+    this.reglas = new ReglasView(this);
+
+    // Pista fija: recuerda que se puede abrir el panel de reglas.
+    this.add.text(CONFIG.ANCHO - 10, CONFIG.ALTO - 10, '[ H ] Reglas del juego', {
+      fontFamily: 'Trebuchet MS', fontSize: '12px', color: '#7a86b8'
+    }).setOrigin(1, 1).setScrollFactor(0).setDepth(900);
 
     // --- Input --------------------------------------
     this.cursores = this.input.keyboard.createCursorKeys();
     this.teclas = this.input.keyboard.addKeys('W,A,S,D,E');
     this.input.keyboard.on('keydown-E', () => this._interactuar());
     this.input.keyboard.on('keydown-SPACE', () => { if (this.dialogo.activo) this.dialogo.avanzar(); });
+    this.input.keyboard.on('keydown-H', () => this._toggleReglas());
 
     // --- Volver del combate -------------------------
     // off()+on() con la MISMA referencia para no acumular listeners
@@ -174,7 +182,7 @@ export default class GameScene extends Phaser.Scene {
     const t = this.teclas;
     let vx = 0, vy = 0;
 
-    if (this.cartelAbierto || this.dialogo.activo) { this.jugador.setVelocity(0, 0); return; }
+    if (this.cartelAbierto || this.dialogo.activo || this.reglas.abierto) { this.jugador.setVelocity(0, 0); return; }
 
     if (this.cursores.left.isDown || t.A.isDown) vx = -v;
     else if (this.cursores.right.isDown || t.D.isDown) vx = v;
@@ -213,7 +221,7 @@ export default class GameScene extends Phaser.Scene {
 
   // ---------------------------------------------------
   _chocarEnemigo(spr) {
-    if (this.cartelAbierto) return;
+    if (this.cartelAbierto || this.reglas.abierto) return;
     if (this.time.now < this.inmunidad) return;
     const ed = spr.getData('ed');
     if (!ed) return;
@@ -263,7 +271,7 @@ export default class GameScene extends Phaser.Scene {
 
   // ---------------------------------------------------
   _interactuar() {
-    if (this.cartelAbierto) return;
+    if (this.cartelAbierto || this.reglas.abierto) return;
     if (this.dialogo.activo) { this.dialogo.avanzar(); return; }
     const cerca = (spr) => Phaser.Math.Distance.Between(this.jugador.x, this.jugador.y, spr.x, spr.y) < 56;
 
@@ -289,6 +297,16 @@ export default class GameScene extends Phaser.Scene {
     this.hud.mensaje('No hay nada con que interactuar aqui.');
   }
 
+  // Panel global de reglas de negocio (ReglasView). No se abre encima
+  // de otro panel; se cierra con H, ESC o un clic.
+  _toggleReglas() {
+    if (this.cartelAbierto || this.dialogo.activo) return;
+    if (this.reglas.abierto) { this.reglas.cerrar(); return; }
+    this.reglas.abrir();
+    this.input.keyboard.once('keydown-ESC', () => this.reglas.cerrar());
+    this.input.once('pointerdown', () => this.reglas.cerrar());
+  }
+
   _cruzarPuerta() {
     if (this._cruzando) return;
     this._cruzando = true;
@@ -302,6 +320,10 @@ export default class GameScene extends Phaser.Scene {
   // Cartel de la zona: briefing completo (historia + concepto POO +
   // ejemplo de codigo + objetivo). PERMANECE hasta que el jugador
   // lo cierra con tecla o clic. Congela el movimiento mientras.
+  //
+  // El alto del panel se CALCULA a partir del texto real (algunas
+  // zonas explican mas que otras) en vez de usar un numero fijo,
+  // para que nunca se corte ni sobre hueco de mas.
   _cartelZona() {
     this.cameras.main.fadeIn(250);
     this.cartelAbierto = true;
@@ -311,17 +333,16 @@ export default class GameScene extends Phaser.Scene {
       objetivo: `Derrota a los ${this.zona.totalEnemigos()} enemigos para abrir la puerta.`
     };
     const cx = CONFIG.ANCHO / 2;
-    const W = 660, H = 440;
+    const W = 660;
     const x0 = cx - W / 2;
-    let y = CONFIG.ALTO / 2 - H / 2;
     const grupo = [];
     const add = o => { grupo.push(o.setScrollFactor(0).setDepth(2000)); return o; };
 
-    add(this.add.rectangle(cx, CONFIG.ALTO / 2, W, H, 0x0b0d17, 0.97).setStrokeStyle(3, 0x6c63ff));
-
-    add(this.add.text(cx, y + 26, `ZONA ${this.zona.id}  ·  ${this.zona.nombre}`, {
+    // 1) Construye el contenido midiendo su alto real segun crece.
+    let y = 26;
+    add(this.add.text(cx, y, `ZONA ${this.zona.id}  ·  ${this.zona.nombre}`, {
       fontFamily: 'Trebuchet MS', fontSize: '22px', color: '#8b5cf6', fontStyle: 'bold' }).setOrigin(0.5));
-    y += 52;
+    y += 44;
 
     const seccion = (etiqueta, texto, color, mono) => {
       add(this.add.text(x0 + 30, y, etiqueta, {
@@ -336,14 +357,25 @@ export default class GameScene extends Phaser.Scene {
     seccion('HISTORIA', b.historia, '#e8ecff');
     seccion('CONCEPTO DE POO', b.concepto, '#c9b8ff');
     if (b.ejemplo) {
-      add(this.add.rectangle(cx, y + 4, W - 50, 1, 0x333850).setOrigin(0.5));
+      add(this.add.rectangle(x0 + W / 2, y + 4, W - 50, 1, 0x333850));
+      y += 14;
       seccion('EN EL CODIGO', b.ejemplo, '#9be7a8', true);
     }
     seccion('OBJETIVO', b.objetivo, '#ffd166');
 
-    const cerrar = add(this.add.text(cx, CONFIG.ALTO / 2 + H / 2 - 24,
-      '[ Pulsa cualquier tecla o haz clic para empezar ]', {
+    const cerrar = add(this.add.text(cx, y + 4, '[ Pulsa cualquier tecla o haz clic para empezar ]', {
       fontFamily: 'Trebuchet MS', fontSize: '13px', color: '#7a86b8' }).setOrigin(0.5));
+    const H = y + 4 + cerrar.height + 24;
+
+    // 2) Fondo del tamano EXACTO del contenido, detras de todo (depth menor).
+    const fondo = this.add.rectangle(cx, H / 2, W, H, 0x0b0d17, 0.97)
+      .setStrokeStyle(3, 0x6c63ff).setScrollFactor(0).setDepth(1999);
+    grupo.push(fondo);
+
+    // 3) Centra el bloque completo (ya medido) en el canvas.
+    const offsetY = (CONFIG.ALTO - H) / 2;
+    grupo.forEach(o => { o.y += offsetY; });
+
     this.tweens.add({ targets: cerrar, alpha: 0.3, yoyo: true, repeat: -1, duration: 700 });
 
     const cerrarCartel = () => {
