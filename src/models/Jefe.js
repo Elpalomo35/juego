@@ -17,12 +17,14 @@ export class Jefe extends Enemigo {
     super({
       nombre,
       especie: 'Jefe',
-      vida: config.vida ?? 210,
-      ataque: config.ataque ?? 24,
-      defensa: config.defensa ?? 14,
+      // Estadisticas pensadas para un heroe de nivel 3-4 (el nivel
+      // tipico al llegar aqui tras limpiar las zonas 1 y 2).
+      vida: config.vida ?? 160,
+      ataque: config.ataque ?? 18,
+      defensa: config.defensa ?? 10,
       energia: 100,
-      expRecompensa: config.expRecompensa ?? 120,
-      oroRecompensa: config.oroRecompensa ?? 90,
+      expRecompensa: config.expRecompensa ?? 110,
+      oroRecompensa: config.oroRecompensa ?? 80,
       textura: 'jefe'
     });
     this.fase = 1;
@@ -30,10 +32,12 @@ export class Jefe extends Enemigo {
   }
 
   // LOGICA DE NEGOCIO: el combate llama esto cada turno del jefe.
+  // El aumento de ataque en Fase 2 es moderado (+25%) para que el
+  // combate siga siendo justo y no un pico de danio imposible.
   verificarFase() {
     if (this.fase === 1 && this.vida <= this.vidaMaxima * 0.5) {
       this.fase = 2;
-      this._ataque = Math.round(this._ataque * 1.4);
+      this._ataque = Math.round(this._ataque * 1.25);
       return { texto: `${this.nombre} entra en FASE 2! Su ataque aumenta.` };
     }
     return null;
@@ -41,10 +45,10 @@ export class Jefe extends Enemigo {
 
   // POLIMORFISMO
   atacar(objetivo) {
-    const probCrit = this.fase === 2 ? 0.35 : 0.2;
+    const probCrit = this.fase === 2 ? 0.22 : 0.12;
     const critico = Math.random() < probCrit;
-    const base = this._ataque + aleatorio(0, 10);
-    const danio = critico ? Math.round(base * 1.8) : base;
+    const base = this._ataque + aleatorio(0, 8);
+    const danio = critico ? Math.round(base * 1.5) : base;
     return {
       danio,
       tipo: critico ? 'critico' : 'fisico',
@@ -56,7 +60,7 @@ export class Jefe extends Enemigo {
 
   _ataqueEspecial(objetivo) {
     const nombre = this.ataquesEspeciales[aleatorio(0, this.ataquesEspeciales.length - 1)];
-    const danio = Math.round(this._ataque * (this.fase === 2 ? 2 : 1.6)) + aleatorio(0, 12);
+    const danio = Math.round(this._ataque * (this.fase === 2 ? 1.5 : 1.3)) + aleatorio(0, 8);
     return { danio, tipo: 'especial_jefe', texto: `${this.nombre} usa "${nombre}" por ${danio} de danio devastador!` };
   }
 }

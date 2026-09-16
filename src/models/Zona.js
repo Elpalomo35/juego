@@ -111,7 +111,7 @@ export function crearZonas() {
         { id: 'z1c1', x: 22, y: 2, recompensa: { tipo: 'objeto', valor: 'pocion_media' } },
         { id: 'z1c2', x: 4,  y: 13, recompensa: { tipo: 'exp', valor: 40 } }
       ],
-      puerta: { x: 23, y: 8, destino: 2 }
+      puerta: { x: 22, y: 8, destino: 2 }
     }),
 
     new Zona({
@@ -140,7 +140,7 @@ export function crearZonas() {
       enemigos: [
         { id: 'z2e1', x: 8,  y: 3, fabricar: () => new Esqueleto('Hueso Roto') },
         { id: 'z2e2', x: 15, y: 4, fabricar: () => new Esqueleto('Calavera') },
-        { id: 'z2e3', x: 10, y: 12, fabricar: () => new MagoEnemigo('Nigromante') },
+        { id: 'z2e3', x: 10, y: 10, fabricar: () => new MagoEnemigo('Nigromante') },
         { id: 'z2e4', x: 20, y: 11, fabricar: () => new Esqueleto('Centinela') }
       ],
       cofres: [
@@ -176,7 +176,7 @@ export function crearZonas() {
       enemigos: [
         { id: 'z3e1', x: 6,  y: 3, fabricar: () => new MagoEnemigo('Guardian Arcano') },
         { id: 'z3e2', x: 18, y: 3, fabricar: () => new Esqueleto('Campeon Caido') },
-        { id: 'z3boss', x: 12, y: 4, fabricar: () => new Jefe('Senor de las Sombras', { vida: 240, ataque: 26, defensa: 15, expRecompensa: 200, oroRecompensa: 150 }) }
+        { id: 'z3boss', x: 12, y: 4, fabricar: () => new Jefe('Senor de las Sombras', { vida: 185, ataque: 19, defensa: 11, expRecompensa: 160, oroRecompensa: 120 }) }
       ],
       cofres: [
         { id: 'z3c1', x: 2,  y: 2, recompensa: { tipo: 'objeto', valor: 'pocion_grande' } },

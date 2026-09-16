@@ -17,6 +17,8 @@
 // Guerrero Mago  Goblin Esqueleto ...
 // ============================================================
 
+import { ReglasCombate } from '../services/ReglasCombate.js';
+
 // Utilidad: entero aleatorio entre min y max (ambos incluidos)
 export function aleatorio(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -73,13 +75,11 @@ export class Personaje {
   }
 
   // ENCAPSULAMIENTO + LOGICA DE NEGOCIO:
-  // Unica forma valida de bajar la vida.
-  // Reglas aplicadas aqui:
-  //   * la defensa reduce el danio,
-  //   * el danio minimo siempre es 1,
-  //   * la vida nunca baja de 0.
+  // Unica forma valida de bajar la vida. La FORMULA del danio vive
+  // en el servicio ReglasCombate (se puede probar/ajustar aparte);
+  // el metodo garantiza que la vida nunca baje de 0.
   recibirDanio(cantidadBruta) {
-    const danio = Math.max(1, Math.round(cantidadBruta - this.defensa));
+    const danio = ReglasCombate.calcularDanio(cantidadBruta, this.defensa);
     this.#vida = Math.max(0, this.#vida - danio);
     return danio;   // devuelve el danio REAL aplicado (para la Vista)
   }
@@ -100,6 +100,15 @@ export class Personaje {
 
   defender() {
     this.defendiendo = true;
+  }
+
+  // ENCAPSULAMIENTO: forma correcta de subir/bajar la defensa desde
+  // FUERA del objeto (p. ej. la maldicion del Esqueleto). Nadie
+  // deberia escribir personaje._defensa directamente; se llama a
+  // este metodo, que aplica la regla "la defensa nunca es negativa".
+  ajustarDefensa(delta) {
+    this._defensa = Math.max(0, this._defensa + delta);
+    return this._defensa;
   }
 
   // LOGICA DE NEGOCIO: una habilidad no se puede usar sin

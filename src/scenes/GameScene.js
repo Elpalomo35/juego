@@ -72,35 +72,34 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ---------------------------------------------------
+  // OPTIMIZACION: en vez de crear un GameObject de Phaser por CADA
+  // casilla de suelo/muro (cientos por mapa: 24x16=384 solo de suelo),
+  // se usan unos pocos "tileSprite" que repiten una textura pequena.
+  // Mismo resultado visual, muchisimos menos objetos que actualizar.
   _dibujarMapa() {
     const T = CONFIG.TILE;
     const { anchoTiles, altoTiles } = this.zona;
+    const anchoPx = anchoTiles * T, altoPx = altoTiles * T;
 
-    // suelo
-    for (let y = 0; y < altoTiles; y++) {
-      for (let x = 0; x < anchoTiles; x++) {
-        this.add.image(x * T, y * T, (x + y) % 2 ? 'suelo' : 'sueloAlt').setOrigin(0);
-      }
-    }
+    // suelo: 1 solo objeto en vez de 384
+    this.add.tileSprite(0, 0, anchoPx, altoPx, 'sueloPatron').setOrigin(0);
 
-    // muros: grupo estatico con fisica
+    // muros: el borde son 4 "bandas" (arriba/abajo/izquierda/derecha)
+    // y cada obstaculo interno es UNA sola pieza (no una por casilla).
     this.muros = this.physics.add.staticGroup();
-    const poner = (tx, ty) => {
-      const m = this.muros.create(tx * T + T / 2, ty * T + T / 2, 'muro');
-      m.refreshBody();
+    const banda = (x, y, w, h) => {
+      const b = this.add.tileSprite(x, y, w, h, 'muro').setOrigin(0);
+      this.physics.add.existing(b, true);   // cuerpo estatico del tamano exacto de la banda
+      this.muros.add(b);
     };
-    // borde
-    for (let x = 0; x < anchoTiles; x++) { poner(x, 0); poner(x, altoTiles - 1); }
-    for (let y = 0; y < altoTiles; y++) { poner(0, y); poner(anchoTiles - 1, y); }
-    // obstaculos internos
-    this.zona.obstaculos.forEach(o => {
-      for (let dy = 0; dy < o.h; dy++)
-        for (let dx = 0; dx < o.w; dx++)
-          poner(o.x + dx, o.y + dy);
-    });
+    banda(0, 0, anchoPx, T);                   // borde superior
+    banda(0, altoPx - T, anchoPx, T);          // borde inferior
+    banda(0, 0, T, altoPx);                    // borde izquierdo
+    banda(anchoPx - T, 0, T, altoPx);          // borde derecho
+    this.zona.obstaculos.forEach(o => banda(o.x * T, o.y * T, o.w * T, o.h * T));
 
-    this.physics.world.setBounds(0, 0, anchoTiles * T, altoTiles * T);
-    this.cameras.main.setBounds(0, 0, anchoTiles * T, altoTiles * T);
+    this.physics.world.setBounds(0, 0, anchoPx, altoPx);
+    this.cameras.main.setBounds(0, 0, anchoPx, altoPx);
   }
 
   _tilePos(tx, ty) {
@@ -136,7 +135,6 @@ export default class GameScene extends Phaser.Scene {
       spr.setData('ed', ed);
       spr.setData('base', base);
       spr.play(`${base}_idle`);
-      spr.refreshBody();
       spr.body.setSize(34, 26);
       spr.body.setOffset(21, 34);
       spr.refreshBody();
@@ -206,7 +204,11 @@ export default class GameScene extends Phaser.Scene {
       this._cruzarPuerta();
     }
 
-    this.hud.actualizar(this.juego.jugador.estado(), this.zona);
+    // OPTIMIZACION: el HUD (texto + barras) no necesita redibujarse
+    // en cada uno de los 60 fotogramas por segundo; con 1 de cada 4
+    // (~15 veces/seg) se ve igual de fluido y es mucho mas barato.
+    this._tickHud = (this._tickHud || 0) + 1;
+    if (this._tickHud % 4 === 0) this.hud.actualizar(this.juego.jugador.estado(), this.zona);
   }
 
   // ---------------------------------------------------

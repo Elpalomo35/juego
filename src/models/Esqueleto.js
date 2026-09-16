@@ -23,11 +23,14 @@ export class Esqueleto extends Enemigo {
   }
 
   // POLIMORFISMO: golpe de hueso, 30% de maldicion.
+  // ENCAPSULAMIENTO: para debilitar al objetivo se llama a su metodo
+  // ajustarDefensa() (heredado de Personaje) en vez de tocar su campo
+  // protegido directamente: cada objeto sigue siendo dueno de su estado.
   atacar(objetivo) {
     const danio = this._ataque + aleatorio(0, 5);
     const maldice = Math.random() < 0.3;
     if (maldice && objetivo) {
-      objetivo._defensa = Math.max(0, objetivo._defensa - 2);
+      objetivo.ajustarDefensa(-2);
       return { danio, tipo: 'maldicion', texto: `${this.nombre} maldice: ${danio} de danio y -2 de defensa!` };
     }
     return { danio, tipo: 'fisico', texto: `${this.nombre} golpea con un hueso por ${danio}.` };

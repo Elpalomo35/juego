@@ -290,6 +290,26 @@ function tileSuelo(scene, key, base, punto) {
   g.generateTexture(key, T, T); g.destroy();
 }
 
+// Patron de 2x2 casillas combinando suelo/sueloAlt en UNA sola textura.
+// GameScene la repite con un tileSprite en vez de crear un GameObject
+// por casilla (optimizacion: 1 objeto en vez de cientos por mapa).
+function tileSueloPatron(scene) {
+  const g = scene.make.graphics({ x: 0, y: 0 }, false);
+  const celda = (ox, oy, base, punto, fase) => {
+    g.fillStyle(base, 1); g.fillRect(ox, oy, T, T);
+    g.fillStyle(punto, 0.6);
+    const pts = [[7, 9], [24, 6], [12, 27], [30, 20], [5, 33]];
+    pts.forEach(([x, y], i) => { if ((i + fase) % 2 === 0) g.fillRect(ox + x, oy + y, 3, 3); });
+    g.lineStyle(1, 0x000000, 0.16); g.strokeRect(ox, oy, T, T);
+  };
+  celda(0, 0, PALETA.suelo, PALETA.sueloAlt, 0);
+  celda(T, 0, PALETA.sueloAlt, PALETA.suelo, 1);
+  celda(0, T, PALETA.sueloAlt, PALETA.suelo, 1);
+  celda(T, T, PALETA.suelo, PALETA.sueloAlt, 0);
+  g.generateTexture('sueloPatron', T * 2, T * 2);
+  g.destroy();
+}
+
 function tileMuro(scene) {
   const g = scene.make.graphics({ x: 0, y: 0 }, false);
   g.fillStyle(PALETA.muro, 1); g.fillRect(0, 0, T, T);
@@ -354,6 +374,7 @@ export function generarTexturas(scene) {
 
   tileSuelo(scene, 'suelo', PALETA.suelo, PALETA.sueloAlt);
   tileSuelo(scene, 'sueloAlt', PALETA.sueloAlt, PALETA.suelo);
+  tileSueloPatron(scene);
   tileMuro(scene);
   cofreCerrado(scene);
   cofreAbierto(scene);

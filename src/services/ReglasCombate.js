@@ -1,25 +1,24 @@
 // ============================================================
 // SERVICIO: ReglasCombate.js
 // ------------------------------------------------------------
-// CONCEPTO MVC: SERVICIO. Funciones PURAS (sin estado, sin
-//   Phaser) que expresan reglas del negocio del combate.
+// CONCEPTO MVC: SERVICIO. Funciones PURAS (sin estado propio,
+//   sin Phaser) que expresan reglas del negocio del combate.
 //   Se pueden probar de forma aislada y reutilizar.
 //
-// Nota: el modelo Combate ya aplica el flujo de turnos; este
-// servicio documenta y centraliza las FORMULAS para que la
-// regla viva en un solo sitio.
+// Quien las USA de verdad:
+//   * Personaje.recibirDanio()  -> calcularDanio()
+//   * Combate._jugadorHuye()    -> puedeHuir()
+//   * Combate._finVictoria()    -> calcularRecompensa()
+// Asi la FORMULA vive en un solo sitio en vez de repetirse
+// dentro de cada modelo.
 // ============================================================
 
 export const ReglasCombate = {
 
-  // REGLA: el danio real = danio bruto - defensa, minimo 1.
+  // REGLA: el danio real = danio bruto - defensa, minimo 1
+  // (un ataque siempre hace algo, por mucha defensa que haya).
   calcularDanio(danioBruto, defensa) {
     return Math.max(1, Math.round(danioBruto - defensa));
-  },
-
-  // REGLA: un personaje esta derrotado cuando su vida llega a 0.
-  estaDerrotado(personaje) {
-    return personaje.vida <= 0;
   },
 
   // REGLA: no se puede huir de un Jefe.

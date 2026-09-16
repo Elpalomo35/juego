@@ -22,6 +22,8 @@
 //   * Al ganar se calculan las recompensas (exp y oro).
 // ============================================================
 
+import { ReglasCombate } from '../services/ReglasCombate.js';
+
 export class Combate {
   constructor(jugador, enemigo) {
     this.jugador  = jugador;   // instancia de Guerrero / Mago / Arquero
@@ -119,8 +121,8 @@ export class Combate {
   }
 
   _jugadorHuye() {
-    // LOGICA DE NEGOCIO: no se puede huir de un Jefe.
-    if (this.enemigo.especie === 'Jefe') {
+    // LOGICA DE NEGOCIO (servicio ReglasCombate): no se puede huir de un Jefe.
+    if (!ReglasCombate.puedeHuir(this.enemigo)) {
       this._turnoConsumido = true;
       this._log('No puedes huir de un Jefe!');
       return;
@@ -195,10 +197,9 @@ export class Combate {
     this.terminado = true;
     this.turno = 'fin';
     this.resultado = 'victoria';
-    this.recompensa = {
-      exp: this.enemigo.expRecompensa,
-      oro: this.enemigo.oroRecompensa
-    };
+    // LOGICA DE NEGOCIO (servicio ReglasCombate): combates mas largos
+    // dan un pequeno extra de recompensa (hasta +50% pasadas 10 rondas).
+    this.recompensa = ReglasCombate.calcularRecompensa(this.enemigo, this.ronda);
     this._log(`${this.enemigo.nombre} derrotado! +${this.recompensa.exp} EXP, +${this.recompensa.oro} oro.`);
   }
 
